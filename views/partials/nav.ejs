@@ -1,0 +1,78 @@
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand">
+      <div class="logo-ring"><img src="/images/logo.png" alt="KSS Logo"></div>
+      <div>
+        <div class="brand-name">Kithumula Senior School</div>
+        <div class="brand-motto">Forward Ever, Backwards Never</div>
+      </div>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="nav-links" id="navLinks">
+      <a href="/">Home</a>
+      <a href="/#about">About</a>
+      <a href="/#pathways">Academics</a>
+      <a href="/staff">Staff</a>
+      <a href="/#results-lookup">Results</a>
+      <a href="/#enrol">Contact</a>
+      <div class="nav-dropdown" id="portalDropdown">
+        <button class="nav-dropdown-btn" onclick="toggleDropdown(event)">Portals ▾</button>
+        <div class="nav-dropdown-menu" id="dropdownMenu">
+          <a href="/admin/login" class="dropdown-item">
+            <span class="di-icon">🔐</span>
+            <span><strong>Admin Portal</strong><br><small>School administration</small></span>
+          </a>
+          <a href="/teacher/login" class="dropdown-item">
+            <span class="di-icon">👩‍🏫</span>
+            <span><strong>Teacher Portal</strong><br><small>Marks &amp; reports</small></span>
+          </a>
+          <a href="/#results-lookup" class="dropdown-item">
+            <span class="di-icon">📋</span>
+            <span><strong>Student Results</strong><br><small>View your report form</small></span>
+          </a>
+        </div>
+      </div>
+      <a href="/#enrol" class="btn-enrol">Enrol Now</a>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button class="hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="/" onclick="closeMobileNav()">Home</a>
+    <a href="/#about" onclick="closeMobileNav()">About Us</a>
+    <a href="/#pathways" onclick="closeMobileNav()">Academics</a>
+    <a href="/staff" onclick="closeMobileNav()">Our Staff</a>
+    <a href="/#results-lookup" onclick="closeMobileNav()">Student Results</a>
+    <a href="/#enrol" onclick="closeMobileNav()">Contact / Enrol</a>
+    <div class="mobile-nav-divider">Portals</div>
+    <a href="/admin/login" class="mobile-portal-link" onclick="closeMobileNav()">🔐 Admin Portal</a>
+    <a href="/teacher/login" class="mobile-portal-link" onclick="closeMobileNav()">👩‍🏫 Teacher Portal</a>
+    <a href="/#results-lookup" class="mobile-portal-link" onclick="closeMobileNav()">📋 My Results</a>
+  </div>
+</nav>
+
+<script>
+function toggleMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  const hb  = document.getElementById('hamburger');
+  nav.classList.toggle('open');
+  hb.classList.toggle('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+function toggleDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('portalDropdown').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('portalDropdown').classList.remove('open');
+});
+</script>

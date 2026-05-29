@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Results | KSS</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .results-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
+    .pdf-btns { display:flex; gap:0.6rem; flex-wrap:wrap; }
+    .pdf-btn { padding:0.55rem 1.1rem; border-radius:6px; font-size:0.8rem; font-weight:600; text-decoration:none; white-space:nowrap; }
+    .grade-dist { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-bottom:2rem; }
+    .gd-box { border-radius:8px; padding:1rem; text-align:center; }
+    .gd-val { font-family:'DM Serif Display',serif; font-size:1.6rem; font-weight:700; line-height:1; }
+    .gd-lbl { font-size:0.65rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-top:4px; opacity:0.75; }
+    .results-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .results-table th { background:var(--navy); color:white; padding:8px 6px; text-align:center; font-size:0.68rem; letter-spacing:0.06em; white-space:nowrap; }
+    .results-table th.left { text-align:left; }
+    .results-table td { padding:7px 6px; border-bottom:1px solid #f1f5f9; text-align:center; vertical-align:middle; }
+    .results-table td.left { text-align:left; }
+    .results-table tr:nth-child(even) td { background:#fafbfc; }
+    .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:0.72rem; font-weight:700; }
+    .rank-1 { background:#fef9c3; color:#92400e; }
+    .rank-2 { background:#f1f5f9; color:#475569; }
+    .rank-3 { background:#fde8d8; color:#9a3412; }
+    /* Mobile results cards */
+    .results-cards { display:none; }
+    .result-card { background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:0.75rem; }
+    .result-card-header { display:flex; align-items:center; gap:12px; margin-bottom:0.75rem; }
+    .result-card-subjects { display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; margin-top:0.75rem; }
+    .rsub { font-size:0.78rem; background:var(--light); border-radius:5px; padding:0.35rem 0.6rem; display:flex; justify-content:space-between; }
+    @media(max-width:640px){
+      .grade-dist { grid-template-columns:repeat(2,1fr); }
+      .results-table-wrap { display:none; }
+      .results-cards { display:block; }
+      .pdf-btns { width:100%; }
+      .pdf-btn { flex:1; text-align:center; }
+    }
+    @media(max-width:400px){
+      .pdf-btns { flex-direction:column; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+<% const myClassForNav = classInfo; %>
+<%- include('nav', { activePage: 'results', myClass: myClassForNav }) %>
+<div class="admin-layout">
+  <div class="results-header">
+    <div class="admin-page-header" style="margin:0;">
+      <h1>Results — <%= classInfo.name %></h1>
+      <p><%= students.length %> students · ranked by mean points</p>
+    </div>
+    <div class="pdf-btns">
+      <a href="/teacher/pdf/view/reports/<%= classInfo.id %>?term=Term+1&year=2026"
+         onclick="openPdfModal('/teacher/pdf/view/reports/<%= classInfo.id %>?term=Term+1&year=2026','📄 Report Forms');return false;"
+         class="pdf-btn" style="background:white;color:var(--navy);border:1px solid var(--border);">👁 View</a>
+      <a href="/teacher/pdf/reports/<%= classInfo.id %>?term=Term+1&year=2026"
+         class="pdf-btn" style="background:var(--red);color:white;">📥 Reports</a>
+      <a href="/teacher/pdf/view/summary/<%= classInfo.id %>?term=Term+1&year=2026"
+         onclick="openPdfModal('/teacher/pdf/view/summary/<%= classInfo.id %>?term=Term+1&year=2026','📊 Summary');return false;"
+         class="pdf-btn" style="background:white;color:var(--navy);border:1px solid var(--border);">👁 Summary</a>
+      <a href="/teacher/pdf/summary/<%= classInfo.id %>?term=Term+1&year=2026"
+         class="pdf-btn" style="background:var(--navy);color:white;">📥 Summary</a>
+    </div>
+  </div>
+
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+
+  <%
+    const gradeCounts = {EE:0,ME:0,AE:0,BE:0};
+    students.forEach(s => { if(allResults[s.id]?.overallGrade) gradeCounts[allResults[s.id].overallGrade]++; });
+    const gradeColors = {EE:{bg:'#d1fae5',text:'#065f46',label:'Exceeds'},ME:{bg:'#dbeafe',text:'#1e40af',label:'Meets'},AE:{bg:'#fef9c3',text:'#92400e',label:'Approaches'},BE:{bg:'#fee2e2',text:'#991b1b',label:'Below'}};
+  %>
+  <div class="grade-dist">
+    <% Object.entries(gradeCounts).forEach(([g,c]) => { %>
+    <div class="gd-box" style="background:<%= gradeColors[g].bg %>;">
+      <div class="gd-val" style="color:<%= gradeColors[g].text %>;"><%= c %></div>
+      <div class="gd-lbl" style="color:<%= gradeColors[g].text %>;"><%= g %> — <%= gradeColors[g].label %></div>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- Desktop table -->
+  <div class="admin-card results-table-wrap" style="overflow-x:auto;">
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th style="width:36px;">Rank</th>
+          <th class="left" style="min-width:140px;">Student</th>
+          <th style="width:65px;">Adm</th>
+          <% subjects.forEach(s => { %><th title="<%= s.name %>"><%= s.code %></th><% }) %>
+          <th>Mean%</th><th>Pts</th><th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% students.forEach((student,i) => {
+          const r = allResults[student.id];
+          const rank = r?.rank||(i+1);
+        %>
+        <tr>
+          <td><span class="rank-badge <%= rank<=3?'rank-'+rank:'' %>" style="<%= rank>3?'background:transparent;color:#94a3b8;':'' %>"><%= rank %></span></td>
+          <td class="left"><strong><%= student.name %></strong></td>
+          <td style="color:#94a3b8;font-size:0.78rem;"><%= student.adm_number %></td>
+          <% subjects.forEach(subj => {
+            const sr = r?.results?.find(res=>res.subject.id===subj.id);
+            const gc = sr?.grade==='EE'?'#065f46':sr?.grade==='ME'?'#1e40af':sr?.grade==='AE'?'#92400e':sr?.grade==='BE'?'#991b1b':'#94a3b8';
+          %>
+          <td style="font-weight:600;color:<%= gc %>;">
+            <%= (sr&&sr.total!==null)?sr.total.toFixed(0):'—' %>
+          </td>
+          <% }) %>
+          <td style="font-weight:600;color:var(--navy);"><%= r?.meanPoints?(r.meanPoints*25).toFixed(1):'—' %></td>
+          <td style="color:var(--text-muted);"><%= r?.meanPoints?r.meanPoints.toFixed(2):'—' %></td>
+          <td style="font-weight:700;color:<%= r?.overallGrade==='EE'?'#065f46':r?.overallGrade==='ME'?'#1e40af':r?.overallGrade==='AE'?'#92400e':'#991b1b' %>;"><%= r?.overallGrade||'—' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile result cards -->
+  <div class="results-cards">
+    <% students.forEach((student,i) => {
+      const r = allResults[student.id];
+      const rank = r?.rank||(i+1);
+      const gc = r?.overallGrade==='EE'?'#065f46':r?.overallGrade==='ME'?'#1e40af':r?.overallGrade==='AE'?'#92400e':'#991b1b';
+      const gbg = r?.overallGrade==='EE'?'#d1fae5':r?.overallGrade==='ME'?'#dbeafe':r?.overallGrade==='AE'?'#fef9c3':'#fee2e2';
+    %>
+    <div class="result-card">
+      <div class="result-card-header">
+        <span class="rank-badge <%= rank<=3?'rank-'+rank:'' %>" style="<%= rank>3?'background:var(--light);color:#94a3b8;':'' %>"><%= rank %></span>
+        <div style="flex:1;min-width:0;">
+          <strong style="color:var(--navy);"><%= student.name %></strong>
+          <div style="font-size:0.75rem;color:#94a3b8;font-family:monospace;"><%= student.adm_number %></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:1.1rem;font-weight:700;color:<%= gc %>;line-height:1;"><%= r?.overallGrade||'—' %></div>
+          <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;"><%= r?.meanPoints?r.meanPoints.toFixed(2):'' %> pts</div>
+        </div>
+      </div>
+      <div class="result-card-subjects">
+        <% subjects.forEach(subj => {
+          const sr = r?.results?.find(res=>res.subject.id===subj.id);
+          const sgc = sr?.grade==='EE'?'#065f46':sr?.grade==='ME'?'#1e40af':sr?.grade==='AE'?'#92400e':'#991b1b';
+        %>
+        <div class="rsub">
+          <span style="color:var(--text-muted);"><%= subj.code %></span>
+          <span style="font-weight:600;color:<%= sgc %>;"><%= (sr&&sr.total!==null)?sr.total.toFixed(0)+'%':'—' %></span>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- Subject analysis -->
+  <div class="admin-card" style="margin-top:1.5rem;">
+    <div class="admin-card-header"><h2>Subject Analysis</h2></div>
+    <div style="overflow-x:auto;">
+      <table class="admin-table" style="min-width:500px;">
+        <thead><tr><th>Subject</th><th>Avg%</th><th>High</th><th>Low</th><th>Pass</th><th>EE</th><th>ME</th><th>AE</th><th>BE</th></tr></thead>
+        <tbody>
+          <% subjects.forEach(subj => {
+            const vals=students.map(s=>allResults[s.id]?.results?.find(r=>r.subject.id===subj.id)?.total).filter(v=>v!=null&&v!==undefined);
+            if(!vals.length)return;
+            const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+            const pass=vals.filter(v=>v>=50).length;
+          %>
+          <tr>
+            <td class="left"><strong><%= subj.name %></strong></td>
+            <td><strong><%= avg.toFixed(1) %>%</strong></td>
+            <td style="color:#065f46;font-weight:600;"><%= Math.max(...vals).toFixed(0) %>%</td>
+            <td style="color:#991b1b;font-weight:600;"><%= Math.min(...vals).toFixed(0) %>%</td>
+            <td><span class="badge <%= pass/vals.length>=0.5?'badge-green':'badge-red' %>"><%= ((pass/vals.length)*100).toFixed(0) %>%</span></td>
+            <td style="color:#065f46;font-weight:600;"><%= vals.filter(v=>v>=80).length %></td>
+            <td style="color:#1e40af;font-weight:600;"><%= vals.filter(v=>v>=65&&v<80).length %></td>
+            <td style="color:#92400e;font-weight:600;"><%= vals.filter(v=>v>=50&&v<65).length %></td>
+            <td style="color:#991b1b;font-weight:600;"><%= vals.filter(v=>v<50).length %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Viewer Modal -->
+<div id="pdfModal" style="display:none;position:fixed;inset:0;background:rgba(10,20,40,0.8);z-index:9999;padding:1rem;overflow:auto;">
+  <div style="background:white;border-radius:12px;max-width:900px;margin:0 auto;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.4);">
+    <div style="background:var(--navy);padding:0.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
+      <span id="modalTitle" style="font-size:0.88rem;font-weight:600;color:white;"></span>
+      <div style="display:flex;gap:1rem;align-items:center;">
+        <a id="modalDl" href="#" style="font-size:0.78rem;color:rgba(255,255,255,0.65);text-decoration:underline;">📥 Download</a>
+        <button onclick="closePdfModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:50%;font-size:1rem;cursor:pointer;">✕</button>
+      </div>
+    </div>
+    <iframe id="pdfFrame" src="" style="width:100%;height:75vh;border:none;background:#525659;"></iframe>
+  </div>
+</div>
+<script>
+function openPdfModal(url,title){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalDl').href=url;
+  document.getElementById('pdfFrame').src=url;
+  document.getElementById('pdfModal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closePdfModal(){
+  document.getElementById('pdfModal').style.display='none';
+  document.getElementById('pdfFrame').src='';
+  document.body.style.overflow='';
+}
+document.getElementById('pdfModal').addEventListener('click',function(e){if(e.target===this)closePdfModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePdfModal();});
+</script>
+<%- include('../partials/portal-footer') %>
+</body></html>

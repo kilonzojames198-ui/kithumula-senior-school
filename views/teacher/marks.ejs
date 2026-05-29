@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enter Marks | KSS</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .marks-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; }
+    .exam-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .exam-tab { padding:0.5rem 1.1rem; border-radius:6px; font-size:0.82rem; font-weight:600; border:1.5px solid var(--border); background:white; color:var(--text-muted); text-decoration:none; white-space:nowrap; transition:all 0.15s; }
+    .exam-tab.active { background:var(--navy); border-color:var(--navy); color:white; }
+    .stats-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-bottom:1.5rem; }
+    .stat-mini { background:white; border:1px solid var(--border); border-radius:8px; padding:0.85rem; text-align:center; }
+    .stat-mini .v { font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--navy); line-height:1; }
+    .stat-mini .l { font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-top:3px; }
+    /* Desktop marks grid */
+    .marks-head { display:grid; grid-template-columns:36px 1fr 90px 95px 50px 46px; align-items:center; background:var(--navy); padding:0.55rem 0; }
+    .marks-row  { display:grid; grid-template-columns:36px 1fr 90px 95px 50px 46px; align-items:center; border-bottom:1px solid #f1f5f9; transition:background 0.1s; }
+    .marks-row:hover { background:#fafbff; }
+    .cell { padding:0.5rem 0.6rem; }
+    .cell.center { text-align:center; }
+    .marks-input { width:72px; padding:0.45rem 0.5rem; border:1.5px solid var(--border); border-radius:6px; font-size:0.95rem; font-weight:600; text-align:center; font-family:inherit; transition:all 0.15s; }
+    .marks-input:focus { outline:none; border-color:var(--navy-mid); background:#f0f4ff; box-shadow:0 0 0 3px rgba(26,58,107,0.1); }
+    .marks-input.valid { border-color:#059669; background:#f0fdf4; }
+    .marks-input.over  { border-color:var(--red); background:#fff0f0; }
+    .pct-bar { height:5px; border-radius:3px; background:#e2e8f0; overflow:hidden; margin-top:3px; width:72px; }
+    .pct-bar-fill { height:100%; border-radius:3px; transition:width 0.2s; }
+    .grade-pill { display:inline-flex; align-items:center; justify-content:center; width:34px; height:22px; border-radius:4px; font-size:0.75rem; font-weight:700; }
+    .save-bar { position:sticky; bottom:0; background:white; border-top:1px solid var(--border); padding:0.85rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; z-index:100; box-shadow:0 -4px 20px rgba(0,0,0,0.06); flex-wrap:wrap; }
+    .student-avatar-sm { width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+    /* Mobile: card-based marks entry */
+    .marks-cards { display:none; }
+    .mark-card { background:white; border:1px solid var(--border); border-radius:10px; padding:1.1rem; margin-bottom:0.65rem; }
+    .mark-card-top { display:flex; align-items:center; gap:10px; margin-bottom:0.85rem; }
+    .mark-card-inputs { display:flex; align-items:flex-end; gap:1rem; flex-wrap:wrap; }
+    .mark-card-input-group { flex:1; min-width:120px; }
+    .mark-card-result { display:flex; align-items:center; gap:10px; margin-top:0.6rem; }
+    @media(max-width:640px){
+      .marks-head, .marks-row { display:none; }
+      .marks-cards { display:block; }
+      .stats-strip { grid-template-columns:repeat(2,1fr); }
+      .save-bar { flex-direction:column; align-items:stretch; }
+      .save-bar > div:first-child { text-align:center; }
+      .save-bar-btns { display:flex; gap:0.5rem; }
+      .save-bar-btns button { flex:1; }
+    }
+    @media(max-width:400px){
+      .stats-strip { grid-template-columns:1fr 1fr; }
+      .exam-tab { padding:0.45rem 0.8rem; font-size:0.78rem; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'marks', myClass: null }) %>
+<div class="admin-layout">
+
+  <div class="marks-header">
+    <div>
+      <div style="font-size:0.78rem;color:#94a3b8;margin-bottom:4px;">
+        <a href="/teacher/dashboard" style="color:var(--red);">← Dashboard</a> › Enter Marks
+      </div>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--navy);margin:0;"><%= assignment.subject_name %></h1>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px;">Class: <strong><%= assignment.class_name %></strong> · <%= students.length %> students</p>
+    </div>
+  </div>
+
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+  <% if (flash.error   && flash.error.length)   { %><div class="flash flash-error"><%= flash.error[0] %></div><% } %>
+
+  <!-- Exam type tabs -->
+  <div class="admin-card" style="padding:1.25rem;margin-bottom:1.25rem;">
+    <div style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.75rem;">Select Exam Type</div>
+    <div class="exam-tabs">
+      <% examTypes.forEach(et => { %>
+        <a href="/teacher/marks/<%= assignment.subject_id %>/<%= assignment.class_id %>?exam_type=<%= et.id %>"
+           class="exam-tab <%= examTypeId==et.id?'active':'' %>">
+          <%= et.name %> <span style="font-size:0.7rem;opacity:0.65;">/<%= et.weight %></span>
+        </a>
+      <% }) %>
+    </div>
+    <% if (!examTypeId) { %>
+      <p style="margin-top:0.75rem;font-size:0.83rem;color:#94a3b8;">👆 Select an exam type to start entering marks</p>
+    <% } %>
+  </div>
+
+  <% if (examTypeId && selectedExamType) { %>
+
+  <!-- Stats strip -->
+  <div class="stats-strip" id="statsBar">
+    <div class="stat-mini"><div class="v" id="statEntered">0</div><div class="l">Entered</div></div>
+    <div class="stat-mini"><div class="v" id="statAvg">—</div><div class="l">Avg %</div></div>
+    <div class="stat-mini"><div class="v" id="statHigh">—</div><div class="l">Highest</div></div>
+    <div class="stat-mini"><div class="v" id="statPass">—</div><div class="l">Pass Rate</div></div>
+  </div>
+
+  <form action="/teacher/marks/<%= assignment.subject_id %>/<%= assignment.class_id %>" method="POST" id="marksForm">
+    <input type="hidden" name="exam_type_id" value="<%= examTypeId %>">
+    <input type="hidden" name="max_marks" value="<%= selectedExamType.weight %>">
+
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2><%= selectedExamType.name %> — <%= assignment.subject_name %></h2>
+        <span style="font-size:0.82rem;color:var(--text-muted);">Max: <strong><%= selectedExamType.weight %></strong></span>
+      </div>
+
+      <!-- Desktop rows -->
+      <div class="marks-head">
+        <div class="cell center" style="color:rgba(255,255,255,0.55);font-size:0.68rem;font-weight:600;">#</div>
+        <div class="cell" style="color:white;font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Student</div>
+        <div class="cell center" style="color:white;font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Marks/<%= selectedExamType.weight %></div>
+        <div class="cell center" style="color:white;font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Percentage</div>
+        <div class="cell center" style="color:white;font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Grade</div>
+        <div class="cell"></div>
+      </div>
+
+      <% students.forEach((student,i) => { %>
+      <% const existing = marksMap[student.id]; %>
+      <div class="marks-row" id="row_<%= student.id %>">
+        <div class="cell center" style="color:#94a3b8;font-size:0.8rem;"><%= i+1 %></div>
+        <div class="cell" style="display:flex;align-items:center;gap:8px;">
+          <% if(student.photo){ %>
+            <img src="<%= student.photo %>" alt="" class="student-avatar-sm">
+          <% } else { %>
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">👤</div>
+          <% } %>
+          <div>
+            <div style="font-weight:600;font-size:0.85rem;color:var(--navy);"><%= student.name %></div>
+            <div style="font-size:0.7rem;color:#94a3b8;font-family:monospace;"><%= student.adm_number %></div>
+          </div>
+        </div>
+        <div class="cell center">
+          <input type="number" data-student-id="<%= student.id %>"
+            class="marks-input <%= existing?'valid':'' %>"
+            id="m_<%= student.id %>"
+            value="<%= existing?existing.marks_obtained:'' %>"
+            min="0" max="<%= selectedExamType.weight %>" step="0.5"
+            placeholder="—"
+            oninput="syncDesktopToMobile(this,<%= student.id %>,<%= selectedExamType.weight %>)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();const inputs=document.querySelectorAll('.marks-input');const idx=Array.from(inputs).indexOf(this);if(idx<inputs.length-1)inputs[idx+1].focus();}">
+        </div>
+        <div class="cell center" id="pctCell_<%= student.id %>">
+          <% if(existing){ const p=(existing.marks_obtained/selectedExamType.weight)*100; %>
+            <div style="font-weight:600;font-size:0.85rem;color:var(--navy);"><%= p.toFixed(1) %>%</div>
+            <div class="pct-bar"><div class="pct-bar-fill" style="width:<%= p %>%;background:<%= p>=80?'#059669':p>=65?'#2563eb':p>=50?'#d97706':'#dc2626' %>;"></div></div>
+          <% }else{ %><span style="color:#cbd5e1;font-size:0.82rem;">—</span><% } %>
+        </div>
+        <div class="cell center" id="gradeCell_<%= student.id %>">
+          <% if(existing){ const p=(existing.marks_obtained/selectedExamType.weight)*100;const g=p>=80?'EE':p>=65?'ME':p>=50?'AE':'BE';const gb=g==='EE'?'#d1fae5':g==='ME'?'#dbeafe':g==='AE'?'#fef9c3':'#fee2e2';const gc=g==='EE'?'#065f46':g==='ME'?'#1e40af':g==='AE'?'#92400e':'#991b1b'; %>
+            <span class="grade-pill" style="background:<%= gb %>;color:<%= gc %>;"><%= g %></span>
+          <% }else{ %><span style="color:#cbd5e1;">—</span><% } %>
+        </div>
+      </div>
+
+      <!-- Mobile card for same student -->
+      <div class="marks-cards" id="mcard_<%= student.id %>">
+        <!-- rendered by mobile section below -->
+      </div>
+      <% }) %>
+
+      <!-- Mobile marks cards (shown on small screens) -->
+      <div class="marks-cards" style="padding:0.75rem;">
+        <% students.forEach((student,i) => { %>
+        <% const existing = marksMap[student.id]; %>
+        <div class="mark-card">
+          <div class="mark-card-top">
+            <% if(student.photo){ %>
+              <img src="<%= student.photo %>" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">
+            <% }else{ %>
+              <div style="width:38px;height:38px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">👤</div>
+            <% } %>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:var(--navy);font-size:0.92rem;"><%= student.name %></div>
+              <div style="font-size:0.72rem;color:#94a3b8;font-family:monospace;"><%= student.adm_number %></div>
+            </div>
+            <div style="font-size:0.78rem;color:#94a3b8;">#<%= i+1 %></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div style="flex:1;">
+              <label style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:4px;">Marks / <%= selectedExamType.weight %></label>
+              <input type="number" name="marks[s_<%= student.id %>]"
+                class="marks-input <%= existing?'valid':'' %>"
+                id="mm_<%= student.id %>"
+                value="<%= existing?existing.marks_obtained:'' %>"
+                min="0" max="<%= selectedExamType.weight %>" step="0.5"
+                placeholder="Enter marks"
+                style="width:100%;"
+                oninput="onMarkInputMobile(<%= student.id %>,<%= selectedExamType.weight %>)">
+            </div>
+            <div style="text-align:center;min-width:60px;">
+              <div id="mpct_<%= student.id %>" style="font-weight:600;font-size:1rem;color:var(--navy);">
+                <% if(existing){ %><%= ((existing.marks_obtained/selectedExamType.weight)*100).toFixed(0) %>%<% }else{ %>—<% } %>
+              </div>
+              <div id="mgrade_<%= student.id %>" style="margin-top:4px;">
+                <% if(existing){const p=(existing.marks_obtained/selectedExamType.weight)*100;const g=p>=80?'EE':p>=65?'ME':p>=50?'AE':'BE';const gb=g==='EE'?'#d1fae5':g==='ME'?'#dbeafe':g==='AE'?'#fef9c3':'#fee2e2';const gc=g==='EE'?'#065f46':g==='ME'?'#1e40af':g==='AE'?'#92400e':'#991b1b'; %>
+                  <span class="grade-pill" style="background:<%= gb %>;color:<%= gc %>;"><%= g %></span>
+                <% }else{ %><span style="color:#cbd5e1;font-size:0.82rem;">—</span><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+
+      <!-- Save bar -->
+      <div class="save-bar">
+        <div style="font-size:0.83rem;color:var(--text-muted);">
+          Avg: <strong id="avgDisplay">—</strong> &nbsp;·&nbsp; <span id="enteredDisplay">0</span>/<%= students.length %> entered
+        </div>
+        <div class="save-bar-btns">
+          <button type="button" onclick="clearAll()" class="btn-secondary">Clear</button>
+          <button type="submit" class="btn-primary" style="padding:0.7rem 1.75rem;">💾 Save All Marks</button>
+        </div>
+      </div>
+    </div>
+  </form>
+  <% } %>
+</div>
+
+<script>
+const MAX = <%= examTypeId && selectedExamType ? selectedExamType.weight : 100 %>;
+
+function gradeInfo(p){
+  if(p>=80)return{g:'EE',bg:'#d1fae5',c:'#065f46',bar:'#059669'};
+  if(p>=65)return{g:'ME',bg:'#dbeafe',c:'#1e40af',bar:'#2563eb'};
+  if(p>=50)return{g:'AE',bg:'#fef9c3',c:'#92400e',bar:'#d97706'};
+  return{g:'BE',bg:'#fee2e2',c:'#991b1b',bar:'#dc2626'};
+}
+
+function applyGradeUI(id, v, max){
+  const inp    = document.getElementById('m_'+id);
+  const mInp   = document.getElementById('mm_'+id);
+  const pctEl  = document.getElementById('pctCell_'+id);
+  const grEl   = document.getElementById('gradeCell_'+id);
+  const mpctEl = document.getElementById('mpct_'+id);
+  const mgrEl  = document.getElementById('mgrade_'+id);
+  [inp,mInp].forEach(el=>{ if(el){ el.classList.remove('valid','over'); }});
+  const fv = parseFloat(v);
+  if(v===''||v===null||isNaN(fv)){
+    if(pctEl)  pctEl.innerHTML  = '<span style="color:#cbd5e1;font-size:0.82rem;">—</span>';
+    if(grEl)   grEl.innerHTML   = '<span style="color:#cbd5e1;">—</span>';
+    if(mpctEl){mpctEl.textContent='—'; mpctEl.style.color='';}
+    if(mgrEl)  mgrEl.innerHTML  = '<span style="color:#cbd5e1;font-size:0.82rem;">—</span>';
+  } else if(fv<0||fv>max){
+    [inp,mInp].forEach(el=>{ if(el) el.classList.add('over'); });
+    if(pctEl)  pctEl.innerHTML  = '<span style="color:var(--red);font-size:0.82rem;">Invalid</span>';
+    if(grEl)   grEl.innerHTML   = '<span style="color:var(--red);">!</span>';
+    if(mpctEl){mpctEl.textContent='!'; mpctEl.style.color='var(--red)';}
+    if(mgrEl)  mgrEl.innerHTML  = '<span style="color:var(--red);">!</span>';
+  } else {
+    [inp,mInp].forEach(el=>{ if(el) el.classList.add('valid'); });
+    const pct=(fv/max)*100; const gi=gradeInfo(pct);
+    if(pctEl)  pctEl.innerHTML  = `<div style="font-weight:600;font-size:0.85rem;color:var(--navy);">${pct.toFixed(1)}%</div><div class="pct-bar"><div class="pct-bar-fill" style="width:${pct}%;background:${gi.bar};"></div></div>`;
+    if(grEl)   grEl.innerHTML   = `<span class="grade-pill" style="background:${gi.bg};color:${gi.c};">${gi.g}</span>`;
+    if(mpctEl){mpctEl.textContent=pct.toFixed(0)+'%'; mpctEl.style.color=gi.c;}
+    if(mgrEl)  mgrEl.innerHTML  = `<span class="grade-pill" style="background:${gi.bg};color:${gi.c};">${gi.g}</span>`;
+  }
+  updateStats();
+}
+
+// Desktop input typed → copy to mobile input (which has the name attr & will be submitted)
+function syncDesktopToMobile(inp, id, max){
+  const mInp = document.getElementById('mm_'+id);
+  if(mInp) mInp.value = inp.value;
+  applyGradeUI(id, inp.value, max);
+}
+
+// Mobile input typed → copy to desktop display input
+function onMarkInputMobile(id, max){
+  const mInp  = document.getElementById('mm_'+id);
+  const dInp  = document.getElementById('m_'+id);
+  if(dInp) dInp.value = mInp.value;
+  applyGradeUI(id, mInp.value, max);
+}
+
+function updateStats(){
+  // ONLY count mobile inputs (name="marks[s_...]") — the real submitted values
+  const inputs = [...document.querySelectorAll('input[name^="marks[s_"]')];
+  const vals = inputs.map(i=>parseFloat(i.value)).filter(v=>!isNaN(v)&&v>=0&&v<=MAX);
+  const entered = vals.length;
+  const se=document.getElementById('statEntered'), sa=document.getElementById('statAvg'),
+        sh=document.getElementById('statHigh'),    sp=document.getElementById('statPass'),
+        ad=document.getElementById('avgDisplay'),  ed=document.getElementById('enteredDisplay');
+  if(se) se.textContent=entered;
+  if(ed) ed.textContent=entered;
+  if(!entered){ [sa,sh,sp].forEach(el=>{if(el)el.textContent='—'}); if(ad)ad.textContent='—'; return; }
+  const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(sa) sa.textContent=(avg/MAX*100).toFixed(0)+'%';
+  if(sh) sh.textContent=(Math.max(...vals)/MAX*100).toFixed(0)+'%';
+  if(sp) sp.textContent=((vals.filter(v=>(v/MAX*100)>=50).length/entered)*100).toFixed(0)+'%';
+  if(ad) ad.textContent=avg.toFixed(1)+'/'+MAX+' ('+(avg/MAX*100).toFixed(1)+'%)';
+}
+
+function clearAll(){
+  if(!confirm('Clear all marks?'))return;
+  document.querySelectorAll('input[name^="marks[s_"]').forEach(i=>{i.value='';i.classList.remove('valid','over');});
+  document.querySelectorAll('.desktop-input').forEach(i=>{i.value='';i.classList.remove('valid','over');});
+  document.querySelectorAll('[id^="pctCell_"]').forEach(el=>el.innerHTML='<span style="color:#cbd5e1;font-size:0.82rem;">—</span>');
+  document.querySelectorAll('[id^="gradeCell_"]').forEach(el=>el.innerHTML='<span style="color:#cbd5e1;">—</span>');
+  document.querySelectorAll('[id^="mpct_"]').forEach(el=>{el.textContent='—';el.style.color='';});
+  document.querySelectorAll('[id^="mgrade_"]').forEach(el=>el.innerHTML='<span style="color:#cbd5e1;font-size:0.82rem;">—</span>');
+  updateStats();
+}
+
+document.addEventListener('DOMContentLoaded', updateStats);
+</script>
+<%- include('../partials/portal-footer') %>
+</body></html>

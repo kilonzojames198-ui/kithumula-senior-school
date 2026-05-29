@@ -1,0 +1,51 @@
+<%- include('partials/head', { title: 'Our Staff' }) %>
+<%- include('partials/nav') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="section-tag" style="color:var(--gold);">Meet the Team</div>
+    <h1>Our Staff</h1>
+    <p>Dedicated educators committed to shaping the next generation</p>
+  </div>
+</section>
+
+<section class="staff-section">
+  <div class="container">
+    <%
+      const departments = ['Administration', 'STEM', 'Social Sciences', 'Arts & Sports', 'Student Affairs'];
+      const grouped = {};
+      departments.forEach(d => grouped[d] = []);
+      staff.forEach(s => {
+        if (grouped[s.department]) grouped[s.department].push(s);
+        else { grouped[s.department] = [s]; }
+      });
+    %>
+    <% Object.entries(grouped).forEach(([dept, members]) => { %>
+      <% if (members.length > 0) { %>
+        <div class="dept-label"><%= dept %></div>
+        <div class="staff-grid">
+          <% members.forEach(member => { %>
+          <div class="staff-card">
+            <% if (member.photo) { %>
+              <img src="<%= member.photo %>" alt="<%= member.name %>" class="staff-photo">
+            <% } else { %>
+              <div class="staff-photo-placeholder">👤</div>
+            <% } %>
+            <div class="staff-info">
+              <h3><%= member.name %></h3>
+              <div class="staff-role"><%= member.role %></div>
+              <% if (member.bio) { %>
+                <p class="staff-bio"><%= member.bio %></p>
+              <% } %>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      <% } %>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+</body>
+</html>

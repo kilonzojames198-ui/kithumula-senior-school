@@ -1,0 +1,58 @@
+<nav class="portal-nav">
+  <div class="portal-nav-inner">
+    <!-- Brand with logo -->
+    <a href="/admin/dashboard" class="portal-brand">
+      <img src="/images/logo.png" alt="KSS" class="portal-logo">
+      <div class="portal-brand-text">
+        <span class="portal-school">Kithumula Senior School</span>
+        <span class="portal-name">Admin Portal</span>
+      </div>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="portal-nav-links" id="adminNavLinks">
+      <a href="/admin/dashboard"     class="pnl <%= typeof activePage!=='undefined'&&activePage==='dashboard'   ?'active':'' %>">Dashboard</a>
+      <a href="/admin/staff"         class="pnl <%= typeof activePage!=='undefined'&&activePage==='staff'        ?'active':'' %>">Staff</a>
+      <a href="/admin/classes"       class="pnl <%= typeof activePage!=='undefined'&&activePage==='classes'      ?'active':'' %>">Classes</a>
+      <a href="/admin/students"      class="pnl <%= typeof activePage!=='undefined'&&activePage==='students'     ?'active':'' %>">Students</a>
+      <a href="/admin/assignments"   class="pnl <%= typeof activePage!=='undefined'&&activePage==='assignments'  ?'active':'' %>">Assignments</a>
+      <a href="/admin/announcements" class="pnl <%= typeof activePage!=='undefined'&&activePage==='announcements'?'active':'' %>">Notices</a>
+      <a href="/admin/enquiries"     class="pnl <%= typeof activePage!=='undefined'&&activePage==='enquiries'    ?'active':'' %>">Enquiries</a>
+      <a href="/" class="pnl" style="opacity:0.45;">← Site</a>
+      <form action="/admin/logout" method="POST" style="display:inline;">
+        <button type="submit" class="btn-portal-logout">Logout</button>
+      </form>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button class="portal-hamburger" id="adminHamburger" onclick="togglePortalNav('adminDrawer','adminHamburger')" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div class="portal-drawer" id="adminDrawer">
+    <a href="/admin/dashboard"     onclick="closePortalNav('adminDrawer','adminHamburger')">📊 Dashboard</a>
+    <a href="/admin/staff"         onclick="closePortalNav('adminDrawer','adminHamburger')">👥 Staff</a>
+    <a href="/admin/classes"       onclick="closePortalNav('adminDrawer','adminHamburger')">🏫 Classes</a>
+    <a href="/admin/students"      onclick="closePortalNav('adminDrawer','adminHamburger')">🎓 Students</a>
+    <a href="/admin/assignments"   onclick="closePortalNav('adminDrawer','adminHamburger')">📋 Assignments</a>
+    <a href="/admin/announcements" onclick="closePortalNav('adminDrawer','adminHamburger')">📢 Notices</a>
+    <a href="/admin/enquiries"     onclick="closePortalNav('adminDrawer','adminHamburger')">📬 Enquiries</a>
+    <a href="/"                    onclick="closePortalNav('adminDrawer','adminHamburger')">🌐 View Site</a>
+    <form action="/admin/logout" method="POST" style="padding:0.5rem 1.25rem;">
+      <button type="submit" class="btn-portal-logout" style="width:100%;">Logout</button>
+    </form>
+  </div>
+</nav>
+
+<script>
+function togglePortalNav(drawerId, hamburgerId) {
+  document.getElementById(drawerId).classList.toggle('open');
+  document.getElementById(hamburgerId).classList.toggle('open');
+}
+function closePortalNav(drawerId, hamburgerId) {
+  document.getElementById(drawerId).classList.remove('open');
+  document.getElementById(hamburgerId).classList.remove('open');
+}
+</script>

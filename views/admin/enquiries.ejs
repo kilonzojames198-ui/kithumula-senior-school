@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquiries | KSS Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .filter-tabs { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .filter-tab { padding:0.4rem 1rem; border-radius:20px; font-size:0.8rem; font-weight:600; border:1px solid var(--border); text-decoration:none; white-space:nowrap; }
+    /* Mobile enquiry cards */
+    .enq-cards { display:none; }
+    .enq-card { background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:0.75rem; }
+    .enq-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .enq-card-body { font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 1rem; }
+    .enq-card-body strong { color:var(--navy); display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:1px; }
+    @media(max-width:640px){
+      .enq-table-wrap { display:none; }
+      .enq-cards { display:block; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'enquiries' }) %>
+<div class="admin-layout">
+  <div class="admin-page-header">
+    <h1>Enrolment Enquiries</h1>
+    <p>Review and update the status of enquiries submitted via the website.</p>
+  </div>
+
+  <div class="filter-tabs">
+    <% ['all','new','contacted','enrolled','closed'].forEach(s => { %>
+      <a href="/admin/enquiries?status=<%= s %>" class="filter-tab"
+         style="background:<%= filter===s?'var(--navy)':'white' %>;color:<%= filter===s?'white':'var(--text-muted)' %>;">
+        <%= s.charAt(0).toUpperCase()+s.slice(1) %>
+      </a>
+    <% }) %>
+  </div>
+
+  <!-- Desktop table -->
+  <div class="admin-card enq-table-wrap">
+    <div class="admin-card-header"><h2>Enquiries (<%= enquiries.length %>)</h2></div>
+    <div style="overflow-x:auto;">
+      <table class="admin-table" style="min-width:620px;">
+        <thead><tr><th>Student</th><th>Parent</th><th>Phone</th><th>Grade</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          <% if (!enquiries.length) { %><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:2rem;">No enquiries found.</td></tr><% } %>
+          <% enquiries.forEach(e => { %>
+          <tr>
+            <td><strong><%= e.student_name %></strong></td>
+            <td><%= e.parent_name %></td>
+            <td><a href="tel:<%= e.phone %>" style="color:var(--red);"><%= e.phone %></a></td>
+            <td><span class="badge badge-blue"><%= e.grade %></span></td>
+            <td style="color:#94a3b8;font-size:0.82rem;"><%= new Date(e.created_at).toLocaleDateString('en-KE') %></td>
+            <td>
+              <form action="/admin/enquiries/<%= e.id %>/status" method="POST">
+                <select name="status" onchange="this.form.submit()" style="font-size:0.78rem;padding:0.25rem 0.5rem;border:1px solid var(--border);border-radius:4px;font-family:inherit;cursor:pointer;">
+                  <% ['new','contacted','enrolled','closed'].forEach(s => { %>
+                    <option value="<%= s %>" <%= e.status===s?'selected':'' %>><%= s %></option>
+                  <% }) %>
+                </select>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mobile cards -->
+  <div class="enq-cards">
+    <% if (!enquiries.length) { %>
+      <p style="text-align:center;color:#94a3b8;padding:2rem;">No enquiries found.</p>
+    <% } %>
+    <% enquiries.forEach(e => { %>
+    <div class="enq-card">
+      <div class="enq-card-header">
+        <div>
+          <strong style="font-size:0.95rem;color:var(--navy);"><%= e.student_name %></strong>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Parent: <%= e.parent_name %></div>
+        </div>
+        <span class="badge badge-blue"><%= e.grade %></span>
+      </div>
+      <div class="enq-card-body">
+        <div><strong>Phone</strong><a href="tel:<%= e.phone %>" style="color:var(--red);"><%= e.phone %></a></div>
+        <div><strong>Date</strong><%= new Date(e.created_at).toLocaleDateString('en-KE') %></div>
+      </div>
+      <div style="margin-top:0.75rem;">
+        <form action="/admin/enquiries/<%= e.id %>/status" method="POST">
+          <select name="status" onchange="this.form.submit()" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.88rem;">
+            <% ['new','contacted','enrolled','closed'].forEach(s => { %>
+              <option value="<%= s %>" <%= e.status===s?'selected':'' %>><%= s.charAt(0).toUpperCase()+s.slice(1) %></option>
+            <% }) %>
+          </select>
+        </form>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | KSS Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .dash-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:1.5rem; }
+    .quick-actions { display:flex; flex-direction:column; gap:0.65rem; }
+    @media(max-width:768px){ .dash-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'dashboard' }) %>
+<div class="admin-layout">
+  <div class="admin-page-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, <strong><%= adminName %></strong>. Manage staff, students, marks and more.</p>
+  </div>
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+
+  <div class="stat-cards">
+    <div class="stat-card highlight">
+      <div class="stat-card-label">New Enquiries</div>
+      <div class="stat-card-value"><%= stats.enquiries %></div>
+      <div class="stat-card-sub">Awaiting review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Active Staff</div>
+      <div class="stat-card-value"><%= stats.staff %></div>
+      <div class="stat-card-sub"><a href="/admin/staff" style="color:var(--red);font-size:0.78rem;">Manage →</a></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Students Enrolled</div>
+      <div class="stat-card-value"><%= stats.students %></div>
+      <div class="stat-card-sub"><a href="/admin/students" style="color:var(--red);font-size:0.78rem;">View all →</a></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Classes</div>
+      <div class="stat-card-value"><%= stats.classes %></div>
+      <div class="stat-card-sub"><a href="/admin/classes" style="color:var(--red);font-size:0.78rem;">Manage →</a></div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2>Recent Enrolment Enquiries</h2>
+        <a href="/admin/enquiries" class="btn-secondary btn-sm">View All</a>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" style="min-width:480px;">
+          <thead><tr><th>Student</th><th>Grade</th><th>Phone</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            <% if (!recentEnquiries.length) { %><tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:2rem;">No enquiries yet.</td></tr><% } %>
+            <% recentEnquiries.forEach(e => { %>
+            <tr>
+              <td><strong><%= e.student_name %></strong><br><span style="font-size:0.78rem;color:#94a3b8;"><%= e.parent_name %></span></td>
+              <td><span class="badge badge-blue"><%= e.grade %></span></td>
+              <td style="font-size:0.82rem;"><%= e.phone %></td>
+              <td style="color:#94a3b8;font-size:0.78rem;"><%= new Date(e.created_at).toLocaleDateString('en-KE') %></td>
+              <td><span class="badge <%= e.status==='new'?'badge-blue':e.status==='contacted'?'badge-yellow':e.status==='enrolled'?'badge-green':'badge-gray' %>"><%= e.status %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="admin-card" style="padding:1.5rem;">
+        <h3 style="font-size:0.95rem;font-weight:600;color:var(--navy);margin-bottom:1rem;">Quick Actions</h3>
+        <div class="quick-actions">
+          <a href="/admin/staff/new"     class="btn-primary"   style="text-align:center;">+ Add Staff Member</a>
+          <a href="/admin/students"      class="btn-secondary" style="text-align:center;">+ Enrol Student</a>
+          <a href="/admin/classes"       class="btn-secondary" style="text-align:center;">+ Create Class</a>
+          <a href="/admin/assignments"   class="btn-secondary" style="text-align:center;">Assign Subjects</a>
+          <a href="/admin/announcements" class="btn-secondary" style="text-align:center;">Post Announcement</a>
+        </div>
+      </div>
+      <div class="admin-card" style="padding:1.5rem;">
+        <h3 style="font-size:0.95rem;font-weight:600;color:var(--navy);margin-bottom:0.75rem;">Teacher Portal</h3>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.6;">Teachers log in at <code style="background:var(--light);padding:2px 6px;border-radius:3px;">/teacher/login</code> using their <strong>Staff Number</strong> and <strong>ID Number</strong>.</p>
+        <a href="/teacher/login" target="_blank" class="btn-secondary" style="display:block;text-align:center;font-size:0.82rem;">Open Teacher Portal →</a>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>

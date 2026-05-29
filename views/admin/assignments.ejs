@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assignments | KSS Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .two-col { display:grid; grid-template-columns:300px 1fr; gap:2rem; align-items:start; }
+    @media(max-width:768px){ .two-col { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'assignments' }) %>
+<div class="admin-layout">
+  <div class="admin-page-header">
+    <h1>Subject Assignments</h1>
+    <p>Assign teachers to subjects and classes. Teachers only see marks for their assigned subjects.</p>
+  </div>
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+  <% if (flash.error   && flash.error.length)   { %><div class="flash flash-error"><%= flash.error[0] %></div><% } %>
+
+  <div class="two-col">
+    <div class="admin-card">
+      <div class="admin-card-header"><h2>New Assignment</h2></div>
+      <form action="/admin/assignments" method="POST" class="admin-form">
+        <div class="form-group">
+          <label>Teacher *</label>
+          <select name="staff_id" required>
+            <option value="">Select teacher</option>
+            <% teachers.forEach(t => { %><option value="<%= t.id %>"><%= t.name %> (<%= t.staff_number %>)</option><% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject *</label>
+          <select name="subject_id" required>
+            <option value="">Select subject</option>
+            <optgroup label="Core Subjects">
+              <% subjects.filter(s=>s.is_core).forEach(s => { %><option value="<%= s.id %>"><%= s.name %></option><% }) %>
+            </optgroup>
+            <optgroup label="Pathway Subjects">
+              <% subjects.filter(s=>!s.is_core).forEach(s => { %><option value="<%= s.id %>"><%= s.name %></option><% }) %>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Class *</label>
+          <select name="class_id" required>
+            <option value="">Select class</option>
+            <% classes.forEach(c => { %><option value="<%= c.id %>"><%= c.name %></option><% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Academic Year</label>
+          <input type="text" name="academic_year" value="2026">
+        </div>
+        <button type="submit" class="btn-primary">Assign</button>
+      </form>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header"><h2>All Assignments (<%= assignments.length %>)</h2></div>
+      <% if (!assignments.length) { %>
+        <p style="padding:2rem;text-align:center;color:#94a3b8;">No assignments yet.</p>
+      <% } else { %>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" style="min-width:500px;">
+          <thead><tr><th>Teacher</th><th>Subject</th><th>Class</th><th>Year</th><th>Action</th></tr></thead>
+          <tbody>
+            <% assignments.forEach(a => { %>
+            <tr>
+              <td><strong><%= a.teacher_name %></strong><br><span style="font-size:0.75rem;color:#94a3b8;"><%= a.staff_number %></span></td>
+              <td><span class="badge badge-blue"><%= a.subject_name %></span></td>
+              <td><%= a.class_name %></td>
+              <td style="color:#94a3b8;"><%= a.academic_year %></td>
+              <td>
+                <form action="/admin/assignments/<%= a.id %>/delete" method="POST" onsubmit="return confirm('Remove?')">
+                  <button type="submit" class="btn-danger btn-sm">Remove</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>

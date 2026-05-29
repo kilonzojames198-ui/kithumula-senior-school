@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard | KSS</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .dash-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
+    .class-teacher-band { background:var(--navy); color:white; border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+    .ctb-info { flex:1; }
+    .ctb-buttons { display:flex; gap:0.75rem; flex-wrap:wrap; }
+    .ctb-btn { background:rgba(255,255,255,0.12); color:white; padding:0.5rem 1.1rem; border-radius:6px; font-size:0.82rem; font-weight:600; text-decoration:none; white-space:nowrap; }
+    .ctb-btn.red { background:var(--red); }
+    .assign-table-wrap { overflow-x:auto; }
+    .progress-bar { background:#e2e8f0; border-radius:4px; height:6px; width:90px; overflow:hidden; display:inline-block; vertical-align:middle; }
+    .progress-fill { height:100%; border-radius:4px; background:var(--red); }
+    /* Mobile assign cards */
+    .assign-cards { display:none; }
+    .assign-card { background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:0.75rem; }
+    .assign-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem; margin-bottom:0.75rem; flex-wrap:wrap; }
+    @media(max-width:640px){
+      .assign-table-wrap { display:none; }
+      .assign-cards { display:block; }
+    }
+    @media(max-width:480px){
+      .ctb-buttons { width:100%; }
+      .ctb-btn { flex:1; text-align:center; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'dashboard', myClass }) %>
+<div class="admin-layout">
+  <div class="dash-header">
+    <div class="admin-page-header" style="margin:0;">
+      <h1>Welcome, <%= teacherName %></h1>
+      <p>Select a subject to enter or update marks.</p>
+    </div>
+    <a href="/teacher/reports" style="background:var(--navy);color:white;padding:0.7rem 1.4rem;border-radius:8px;font-weight:600;font-size:0.88rem;display:flex;align-items:center;gap:8px;white-space:nowrap;text-decoration:none;">📄 Reports &amp; PDFs</a>
+  </div>
+
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+  <% if (flash.error   && flash.error.length)   { %><div class="flash flash-error"><%= flash.error[0] %></div><% } %>
+
+  <% if (myClass) { %>
+  <div class="class-teacher-band">
+    <div class="ctb-info">
+      <div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Class Teacher</div>
+      <div style="font-size:1.15rem;font-weight:600;"><%= myClass.name %></div>
+    </div>
+    <div class="ctb-buttons">
+      <a href="/teacher/results/<%= myClass.id %>" class="ctb-btn">View Results</a>
+      <a href="/teacher/reports" class="ctb-btn">📄 Reports</a>
+      <a href="/teacher/pdf/reports/<%= myClass.id %>?term=Term+1&year=2026" class="ctb-btn red">📥 Download</a>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h2>My Subject Assignments</h2>
+      <span style="font-size:0.82rem;color:var(--text-muted);"><%= assignments.length %> assignment(s)</span>
+    </div>
+    <% if (!assignments.length) { %>
+      <p style="padding:2rem;text-align:center;color:#94a3b8;">No assignments yet. Ask the admin to assign subjects.</p>
+    <% } else { %>
+
+    <!-- Desktop table -->
+    <div class="assign-table-wrap">
+      <table class="admin-table" style="min-width:480px;">
+        <thead><tr><th>Subject</th><th>Class</th><th>Progress</th><th>Action</th></tr></thead>
+        <tbody>
+          <% assignments.forEach(a => { %>
+          <tr>
+            <td><strong><%= a.subject_name %></strong> <span style="color:#94a3b8;font-size:0.78rem;">(<%= a.code %>)</span></td>
+            <td><span class="badge badge-blue"><%= a.class_name %></span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="progress-bar"><div class="progress-fill" style="width:<%= a.total?Math.min(100,(a.entered/(a.total*3))*100).toFixed(0):0 %>%;"></div></div>
+                <span style="font-size:0.78rem;color:#94a3b8;"><%= a.entered %>/<%= a.total*3 %></span>
+              </div>
+            </td>
+            <td><a href="/teacher/marks/<%= a.subject_id %>/<%= a.class_id %>" class="btn-primary btn-sm">Enter Marks</a></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="assign-cards">
+      <% assignments.forEach(a => { %>
+      <div class="assign-card">
+        <div class="assign-card-top">
+          <div>
+            <strong style="color:var(--navy);font-size:0.95rem;"><%= a.subject_name %></strong>
+            <div style="font-size:0.78rem;color:#94a3b8;margin-top:2px;"><%= a.code %></div>
+          </div>
+          <span class="badge badge-blue"><%= a.class_name %></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem;">
+          <div class="progress-bar" style="width:100%;flex:1;"><div class="progress-fill" style="width:<%= a.total?Math.min(100,(a.entered/(a.total*3))*100).toFixed(0):0 %>%;"></div></div>
+          <span style="font-size:0.78rem;color:#94a3b8;white-space:nowrap;"><%= a.entered %>/<%= a.total*3 %> marks</span>
+        </div>
+        <a href="/teacher/marks/<%= a.subject_id %>/<%= a.class_id %>" class="btn-primary" style="display:block;text-align:center;">Enter Marks →</a>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>

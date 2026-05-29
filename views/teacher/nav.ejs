@@ -1,0 +1,50 @@
+<nav class="portal-nav">
+  <div class="portal-nav-inner">
+    <a href="/teacher/dashboard" class="portal-brand">
+      <img src="/images/logo.png" alt="KSS" class="portal-logo">
+      <div class="portal-brand-text">
+        <span class="portal-school">Kithumula Senior School</span>
+        <span class="portal-name">Teacher Portal</span>
+      </div>
+    </a>
+
+    <div class="portal-nav-links" id="teacherNavLinks">
+      <a href="/teacher/dashboard" class="pnl <%= typeof activePage!=='undefined'&&activePage==='dashboard'?'active':'' %>">Dashboard</a>
+      <a href="/teacher/reports"   class="pnl <%= typeof activePage!=='undefined'&&activePage==='reports'  ?'active':'' %>">📄 Reports</a>
+      <% if (typeof myClass !== 'undefined' && myClass) { %>
+        <a href="/teacher/results/<%= myClass.id %>" class="pnl <%= typeof activePage!=='undefined'&&activePage==='results'?'active':'' %>">My Class</a>
+      <% } %>
+      <a href="/" class="pnl" style="opacity:0.45;">← Site</a>
+      <form action="/teacher/logout" method="POST" style="display:inline;">
+        <button type="submit" class="btn-portal-logout">Logout</button>
+      </form>
+    </div>
+
+    <button class="portal-hamburger" id="teacherHamburger" onclick="togglePortalNav('teacherDrawer','teacherHamburger')" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="portal-drawer" id="teacherDrawer">
+    <a href="/teacher/dashboard" onclick="closePortalNav('teacherDrawer','teacherHamburger')">📊 Dashboard</a>
+    <a href="/teacher/reports"   onclick="closePortalNav('teacherDrawer','teacherHamburger')">📄 Reports &amp; PDFs</a>
+    <% if (typeof myClass !== 'undefined' && myClass) { %>
+      <a href="/teacher/results/<%= myClass.id %>" onclick="closePortalNav('teacherDrawer','teacherHamburger')">🏫 My Class Results</a>
+    <% } %>
+    <a href="/" onclick="closePortalNav('teacherDrawer','teacherHamburger')">🌐 View Site</a>
+    <form action="/teacher/logout" method="POST" style="padding:0.5rem 1.25rem;">
+      <button type="submit" class="btn-portal-logout" style="width:100%;">Logout</button>
+    </form>
+  </div>
+</nav>
+
+<script>
+function togglePortalNav(drawerId, hamburgerId) {
+  document.getElementById(drawerId).classList.toggle('open');
+  document.getElementById(hamburgerId).classList.toggle('open');
+}
+function closePortalNav(drawerId, hamburgerId) {
+  document.getElementById(drawerId).classList.remove('open');
+  document.getElementById(hamburgerId).classList.remove('open');
+}
+</script>

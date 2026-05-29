@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= staff ? 'Edit' : 'Add' %> Staff | KSS Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'staff' }) %>
+<div class="admin-layout">
+  <div class="admin-page-header">
+    <h1><%= staff ? 'Edit Staff Member' : 'Add Staff Member' %></h1>
+    <p><a href="/admin/staff" style="color:var(--red);">← Back to staff list</a></p>
+  </div>
+
+  <% if (flash.error && flash.error.length) { %><div class="flash flash-error"><%= flash.error[0] %></div><% } %>
+
+  <div class="admin-card">
+    <div style="background:var(--light);border-left:4px solid var(--gold);padding:1rem 1.5rem;margin:1.5rem 1.5rem 0;">
+      <strong style="font-size:0.85rem;color:var(--navy);">🔐 Login credentials:</strong>
+      <span style="font-size:0.83rem;color:var(--text-muted);"> Staff members log in at <code>/teacher/login</code> using their <strong>Staff Number</strong> as username and <strong>ID Number</strong> as password.</span>
+    </div>
+    <form action="<%= staff ? '/admin/staff/'+staff.id : '/admin/staff' %>" method="POST" enctype="multipart/form-data" class="admin-form" style="margin-top:0.5rem;">
+      <div class="admin-form-grid">
+
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" name="name" required value="<%= staff?staff.name:'' %>" placeholder="e.g. Mr. James Mutua">
+        </div>
+        <div class="form-group">
+          <label>Staff Number * <span style="font-size:0.72rem;color:#94a3b8;">(used to log in)</span></label>
+          <input type="text" name="staff_number" required value="<%= staff?staff.staff_number:'' %>" placeholder="e.g. KSS006" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <label>ID Number * <span style="font-size:0.72rem;color:#94a3b8;">(used as login password)</span></label>
+          <input type="text" name="id_number" required value="<%= staff?staff.id_number:'' %>" placeholder="National ID number">
+        </div>
+        <div class="form-group">
+          <label>Role / Job Title *</label>
+          <input type="text" name="role" required value="<%= staff?staff.role:'' %>" placeholder="e.g. Teacher, Head of Department">
+        </div>
+        <div class="form-group">
+          <label>Department *</label>
+          <select name="department" required>
+            <option value="">Select department</option>
+            <% ['Administration','STEM','Social Sciences','Arts & Sports','Student Affairs','Support Staff'].forEach(d => { %>
+              <option value="<%= d %>" <%= staff&&staff.department===d?'selected':'' %>><%= d %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" name="email" required value="<%= staff?staff.email:'' %>" placeholder="name@kithumula.sc.ke">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" name="phone" value="<%= staff&&staff.phone?staff.phone:'' %>" placeholder="07XX XXX XXX">
+        </div>
+        <div class="form-group">
+          <label>Photo (optional, max 5MB)</label>
+          <input type="file" name="photo" accept="image/*">
+          <% if (staff && staff.photo) { %>
+            <div style="margin-top:0.5rem;display:flex;align-items:center;gap:10px;">
+              <img src="<%= staff.photo %>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+              <span style="font-size:0.8rem;color:var(--text-muted);">Current — upload new to replace</span>
+            </div>
+          <% } %>
+        </div>
+        <div class="form-group form-full">
+          <label>Bio / Short Description</label>
+          <textarea name="bio" rows="3" placeholder="Brief professional background..."><%= staff&&staff.bio?staff.bio:'' %></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="is_teacher" value="1" <%= !staff||staff.is_teacher?'checked':'' %> style="width:auto;">
+            Can log in as Teacher (enters marks)
+          </label>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="is_active" value="1" <%= !staff||staff.is_active?'checked':'' %> style="width:auto;">
+            Active (show on public directory)
+          </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <button type="submit" class="btn-primary"><%= staff ? 'Save Changes' : 'Add Staff Member' %></button>
+        <a href="/admin/staff" class="btn-secondary">Cancel</a>
+        <% if (staff) { %>
+        <form action="/admin/staff/<%= staff.id %>" method="POST" style="margin-left:auto;" onsubmit="return confirm('Remove <%= staff.name %>?')">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn-danger">Remove Staff</button>
+        </form>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>

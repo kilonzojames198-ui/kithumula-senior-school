@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements | KSS Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .ann-layout { display:grid; grid-template-columns:1fr 1.4fr; gap:2rem; align-items:start; }
+    .ann-item { padding:1.25rem; border-bottom:1px solid #f1f5f9; }
+    .ann-item:last-child { border-bottom:none; }
+    .ann-item-top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
+    .ann-item-actions { display:flex; gap:0.5rem; flex-shrink:0; }
+    @media(max-width:768px){ .ann-layout { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="admin-body">
+<%- include('nav', { activePage: 'announcements' }) %>
+<div class="admin-layout">
+  <div class="admin-page-header">
+    <h1>Announcements</h1>
+    <p>Manage notices shown on the school home page.</p>
+  </div>
+  <% if (flash.success && flash.success.length) { %><div class="flash flash-success"><%= flash.success[0] %></div><% } %>
+
+  <div class="ann-layout">
+    <div class="admin-card">
+      <div class="admin-card-header"><h2>Post New Announcement</h2></div>
+      <form action="/admin/announcements" method="POST" class="admin-form">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" name="title" required placeholder="e.g. 2026 Enrolment Open">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="event">Event</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea name="body" rows="4" required placeholder="Announcement details..."></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="is_active" value="1" checked style="width:auto;">
+            Publish immediately
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">Publish</button>
+      </form>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header"><h2>All Announcements (<%= announcements.length %>)</h2></div>
+      <% if (!announcements.length) { %>
+        <p style="padding:2rem;text-align:center;color:#94a3b8;">No announcements yet.</p>
+      <% } %>
+      <% announcements.forEach(ann => { %>
+      <div class="ann-item">
+        <div class="ann-item-top">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:0.4rem;">
+              <span class="badge <%= ann.category==='academic'?'badge-yellow':ann.category==='event'?'badge-green':'badge-blue' %>"><%= ann.category %></span>
+              <span class="badge <%= ann.is_active?'badge-green':'badge-gray' %>"><%= ann.is_active?'Live':'Hidden' %></span>
+            </div>
+            <strong style="font-size:0.92rem;color:var(--navy);display:block;"><%= ann.title %></strong>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.25rem;"><%= ann.body.length>100?ann.body.substring(0,100)+'…':ann.body %></p>
+            <span style="font-size:0.75rem;color:#94a3b8;"><%= new Date(ann.created_at).toLocaleDateString('en-KE') %></span>
+          </div>
+          <div class="ann-item-actions">
+            <form action="/admin/announcements/<%= ann.id %>" method="POST">
+              <input type="hidden" name="title" value="<%= ann.title %>">
+              <input type="hidden" name="body" value="<%= ann.body %>">
+              <input type="hidden" name="category" value="<%= ann.category %>">
+              <input type="hidden" name="is_active" value="<%= ann.is_active?0:1 %>">
+              <button type="submit" class="btn-secondary btn-sm"><%= ann.is_active?'Hide':'Show' %></button>
+            </form>
+            <form action="/admin/announcements/<%= ann.id %>" method="POST" onsubmit="return confirm('Delete?')">
+              <input type="hidden" name="_method" value="DELETE">
+              <input type="hidden" name="title" value="<%= ann.title %>">
+              <input type="hidden" name="body" value="<%= ann.body %>">
+              <input type="hidden" name="category" value="<%= ann.category %>">
+              <button type="submit" class="btn-danger btn-sm">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+<%- include('../partials/portal-footer') %>
+</body></html>
